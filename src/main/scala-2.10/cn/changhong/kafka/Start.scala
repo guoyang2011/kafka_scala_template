@@ -83,7 +83,7 @@ object Start {
     }else if(executorType.equalsIgnoreCase("consumer")) {
       run(ConsumerExample(config))
     }else{
-      throw new RuntimeException("Not Find Valid Type,Please Enter Valid Type [producer or consumer]")
+      throw new RuntimeException(s"Not Find Valid Type[$executorType],Please Enter Valid Type [producer or consumer]")
     }
   }
 
