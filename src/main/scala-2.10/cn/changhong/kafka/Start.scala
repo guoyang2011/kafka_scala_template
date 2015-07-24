@@ -8,6 +8,8 @@ import kafka.consumer.{Consumer, ConsumerConfig}
 import kafka.producer._
 import kafka.utils.{VerifiableProperties, Logging}
 
+import scala.util.Random
+
 
 /**
  * Created by yangguo on 15-7-23.
@@ -23,8 +25,10 @@ object Start {
     _props
   }
 
+
   object ConsumerExample extends Logging{
     def apply(config:Properties)={
+      val topic=config.getProperty("topic.id","topic5")
       val consumerConfig=new ConsumerConfig(config)
       val consumer=Consumer.create(consumerConfig)
       val executor=Executors.newFixedThreadPool(4)
@@ -38,7 +42,7 @@ object Start {
                 val it = stream.iterator()
                 Iterator continually (it.hasNext()) takeWhile (_ == true) foreach { bool =>
                   val msg = new String(it.next().message(), "utf8")
-                  println(s"groupId[${groupId}],${System.currentTimeMillis()},Thread ${Thread.currentThread().getId},msg=$msg")
+                  println(s"groupId[${config.getProperty("group.id","group1")}],${System.currentTimeMillis()},Thread ${Thread.currentThread().getId},msg=$msg")
                 }
                 println("isOver")
               }
@@ -51,13 +55,14 @@ object Start {
   }
 
   object ProducerExample extends Logging{
+    val rnd=new Random()
     def apply(config:Properties)={
       val _config=new ProducerConfig(config)
       val producer=new Producer[String,String](_config)
-      (1 to events).foreach{index=>
+      (1 to 10).foreach{index=>
         val runtime=System.currentTimeMillis()
         val msg=s"msgId[$runtime],eventId[$index],msg[helloworld]"
-        val data=new KeyedMessage[String,String](topic,rnd.nextInt().toString,msg)
+        val data=new KeyedMessage[String,String](config.getProperty("topic.id","topic5"),rnd.nextInt().toString,msg)
         producer.send(data)
       }
     }
