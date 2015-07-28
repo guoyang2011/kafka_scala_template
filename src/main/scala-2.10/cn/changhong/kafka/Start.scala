@@ -1,18 +1,18 @@
 package cn.changhong.kafka
 
-import java.io.FileInputStream
 import java.util.Properties
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
 import cn.changhong.kafka.util.KafkaConfig
-import kafka.admin.AdminUtils
 import kafka.consumer.{Consumer, ConsumerConfig}
 import kafka.producer._
-import kafka.serializer.Encoder
-import kafka.server.KafkaConfig
-import kafka.utils.{VerifiableProperties, Logging}
-import org.I0Itec.zkclient.ZkClient
+import kafka.serializer.{Encoder, StringEncoder}
+import kafka.utils.{Logging, VerifiableProperties}
+
+
+import net.liftweb.json.Extraction._
+import net.liftweb.json._
 
 import scala.util.Random
 
@@ -23,9 +23,17 @@ import scala.util.Random
 class CustomizePartitioner(props: VerifiableProperties = null) extends Partitioner{
   override def partition(key: Any, numPartitions: Int): Int = new DefaultPartitioner(props).partition(key,numPartitions)
 }
+class ObjToJsonStringEncoder(props: VerifiableProperties = null) extends Encoder[Any]{
+  implicit lazy val jsonFormat=DefaultFormats
+  override def toBytes(t: Any): Array[Byte] = {
+    val jsonString=compact(render(decompose(t)))
+    println(jsonString)
+    new StringEncoder(props).toBytes(jsonString)
+  }
+}
+
+
 object Start {
-
-
   object ConsumerExample extends Logging{
     def apply(config:Properties)={
       val topic=config.getProperty("topic.id","topic5")
@@ -40,7 +48,7 @@ object Start {
        * adding more processes/threads will cause Kafka to re-balance, possibly changing the assignment of a Partition to a Thread.
        * some detail see this page:https://cwiki.apache.org/confluence/display/KAFKA/Consumer+Group+Example
        * */
-      val topicCountMap=Map(topic->4)
+      val topicCountMap=Map(topic->1)
 
       val consumerMap=consumer.createMessageStreams(topicCountMap)
       consumerMap.get(topic) match {
@@ -97,7 +105,4 @@ object Start {
     }
 
   }
-
-
-
 }
