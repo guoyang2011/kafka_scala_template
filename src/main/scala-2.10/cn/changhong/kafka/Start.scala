@@ -20,9 +20,18 @@ import scala.util.Random
 /**
  * Created by yangguo on 15-7-23.
  */
+/**
+ * producer message partitioner
+ * @param props
+ */
 class CustomizePartitioner(props: VerifiableProperties = null) extends Partitioner{
   override def partition(key: Any, numPartitions: Int): Int = new DefaultPartitioner(props).partition(key,numPartitions)
 }
+
+/**
+ * producer message encoder
+ * @param props
+ */
 class ObjToJsonStringEncoder(props: VerifiableProperties = null) extends Encoder[Any]{
   implicit lazy val jsonFormat=DefaultFormats
   override def toBytes(t: Any): Array[Byte] = {
@@ -48,7 +57,7 @@ object Start {
        * adding more processes/threads will cause Kafka to re-balance, possibly changing the assignment of a Partition to a Thread.
        * some detail see this page:https://cwiki.apache.org/confluence/display/KAFKA/Consumer+Group+Example
        * */
-      val topicCountMap=Map(topic->1)
+      val topicCountMap=Map(topic->1)//kafka consumer 对同一个topic多个分区实现负载均衡的实现通过每个程序的线程数控制，例如当topic分区为4实现同一个consumer group中的consumer的负载均衡只要每个consumer的线程分区数
 
       val consumerMap=consumer.createMessageStreams(topicCountMap)
       consumerMap.get(topic) match {
